@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <map>
 #include <set>
+#include <tuple>
 
 template<typename t> struct bio;
 
@@ -85,13 +86,13 @@ template<bino::nonpod t> struct bio<std::basic_string<t>>{
         return out;
     }
     template<bino::reader stream> inline static stream& read(stream& in, std::basic_string<t>& str){
-        str.resize(bino<typename std::basic_string<t>::size_type>::read(in));
+        str.resize(bio<typename std::basic_string<t>::size_type>::read(in));
         for(typename std::basic_string<t>::iterator i = str.begin();i!=str.end();++i) bio<t>::read(in,*i);
         return in;
     }
     template<bino::reader stream> inline static std::basic_string<t> read(stream& in){
         std::basic_string<t> str;
-        str.resize(bino<typename std::basic_string<t>::size_type>::read(in));
+        str.resize(bio<typename std::basic_string<t>::size_type>::read(in));
         for(typename std::basic_string<t>::iterator i = str.begin();i!=str.end();++i) bio<t>::read(in,*i);
         return str;
     }
@@ -124,7 +125,7 @@ template<bino::nonpod t> struct bio<std::vector<t>>{
     template<bino::reader stream> inline static stream& read(stream& in, std::vector<t>& vec){
         vec.resize(bio<typename std::vector<t>::size_type>::read(in));
         for(typename std::vector<t>::iterator i=vec.begin();i!=vec.end();++i) bio<t>::read(in,*i);
-        return out;
+        return in;
     }
     template<bino::reader stream> inline static std::vector<t> read(stream& in){
         std::vector<t> vec(bio<typename std::vector<t>::size_type>::read(in));
@@ -212,7 +213,7 @@ template<typename k, typename v> struct bio<std::unordered_map<k,v>>{
             bio<k>::write(out,i->first);
             bio<v>::write(out,i->second);
         }
-        out.close();
+        return out;
     }
     template<bino::reader stream> inline static stream& read(stream& in, std::unordered_map<k,v>& m){
         k tmp;
@@ -247,7 +248,7 @@ template<typename k, typename v> struct bio<std::map<k,v>>{
             bio<k>::write(out,i->first);
             bio<v>::write(out,i->second);
         }
-        out.close();
+        return out;
     }
     template<bino::reader stream> inline static stream& read(stream& in, std::map<k,v>& m){
         k tmp;
@@ -273,6 +274,53 @@ template<typename k, typename v> struct bio<std::map<k,v>>{
         }
         return m;
     }
+};
+
+template<typename t1, typename t2> struct bio<std::pair<t1,t2>>{
+    template<bino::writer stream> inline static stream& write(stream& out, const std::pair<t1,t2>& p){
+        bio<t1>::write(out,p.first);
+        bio<t2>::write(out,p.second);
+        return out;
+    }
+    template<bino::reader stream> inline static stream& read(stream& in, std::pair<t1,t2>& p){
+        bio<t1>::read(in,p.first);
+        bio<t2>::read(in,p.second);
+        return in;
+    }
+    template<bino::reader stream> inline static std::pair<t1,t2> read(stream& in){
+        std::pair<t1,t2> p;
+        bio<t1>::read(in,p.first);
+        bio<t2>::read(in,p.second);
+        return p;
+    }
+};
+
+template<typename... t> struct bio<std::tuple<t...>>{
+    private:
+        template<size_t n, size_t stop> struct tup{
+            template<bino::writer stream> inline static stream& write(stream& out, const std::tuple<t...>& tupl){
+                bio<typename std::tuple_element<n,std::tuple<t...>>::type>::write(out,std::get<n>(tupl));
+                if constexpr (n == stop) return out;
+                else return tup<n+1,stop>::write(out,tupl);
+            }
+            template<bino::reader stream> inline static stream& read(stream& in, std::tuple<t...>& tupl){
+                bio<typename std::tuple_element<n,std::tuple<t...>>::type>::read(in,std::get<n>(tupl));
+                if constexpr (n == stop) return in;
+                else return tup<n+1,stop>::read(in,tupl);
+            }
+        };
+    public:
+        template<bino::writer stream> inline static stream& write(stream& out, const std::tuple<t...>& tupl){
+            return tup<0,sizeof...(t)-1>::write(out,tupl);
+        }
+        template<bino::reader stream> inline static stream& read(stream& in, std::tuple<t...>& tupl){
+            return tup<0,sizeof...(t)-1>::read(in,tupl);
+        }
+        template<bino::reader stream> inline static std::tuple<t...> read(stream& in){
+            std::tuple<t...> retval;
+            tup<0,sizeof...(t)-1>::read(in,retval);
+            return retval;
+        }
 };
 
 #endif
