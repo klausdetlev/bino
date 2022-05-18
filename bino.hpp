@@ -24,7 +24,7 @@ namespace bino{
         bio<t>::write(out,elem);
         return out;
     }
-    template<typename t> void write(const std::string& dst, const t& elem, const std::ios_base::openmode om = {}){
+    template<typename t> void write(const std::string& dst, const t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
         std::ofstream out(dst.c_str(), om | std::ios::out | std::ios::binary);
         bio<t>::write(out,elem);
     }
@@ -32,14 +32,14 @@ namespace bino{
         bio<t>::read(in,elem);
         return in;
     }
-    template<typename t> void read(const std::string& src, t& elem, const std::ios_base::openmode om = {}){
+    template<typename t> void read(const std::string& src, t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
         std::ifstream in(src.c_str(), om | std::ios::binary);
         bio<t>::read(in,elem);
     }
     template<reader stream, typename t> t read(stream& in){
         return bio<t>::read(in);
     }
-    template<typename t> t read(const std::string& src, const std::ios_base::openmode om = {}){
+    template<typename t> t read(const std::string& src, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
         std::ifstream in(src.c_str(), om | std::ios::binary);
         return bio<t>::read(in);
     }
