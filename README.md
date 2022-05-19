@@ -99,4 +99,5 @@ With concepts
     template<typename t> concept nonpod = !std::is_triviallay_copyable<t>::value;
 
 In case of a vector containing trivially_copyable objects, one may take advantage of it's linear memory layout and dump the complete strip of memory at once into the stream.
-The ceoncept allow easy distinction between the layouts.
+
+The concepts allow easy distinction between those layouts.
