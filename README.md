@@ -92,3 +92,9 @@ Example for bio<std::vector<t>>:
             return v;
         }
     };
+
+With concepts
+
+    template<typename t> concept pod = std::is_trivially_copyable<t>::value;
+    template<typename t> concept nonpod = !std::is_triviallay_copyable<t>::value;
+    
