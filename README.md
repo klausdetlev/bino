@@ -42,3 +42,53 @@ Read and write support usage of previously opened fstream-objects, and of- or if
     std::fstream f("dst.dat",std::ios::out|std::ios::binary);
     bino::write(f,A);
 
+Extensible format via specialization of struct bio:
+
+    template<typename t> struct bio{
+        template<bino::writer stream> inline static stream& write(stream&, const t&);
+        template<bino::reader stream> inline static stream& read(stream&, t&);
+        template<bino::reader stream> inline static t read(stream&);
+    };
+
+With concepts
+
+    template<typename t> concept writer = std::is_same<t,std::fstream>::value || std::is_same<t,std::ofstream>;
+    template<typename t> concept reader = std::is_same<t,std::fstream>::value || std::is_same<t,std::ifstream>;
+
+Example for bio<std::vector<t>>:
+
+    template<bino::pod t> struct bio<std::vector<t>>{
+        template<bino::writer stream> inline static stream& write(stream& out, const std::vector<t>& v){
+            bino::write<typename std::vector<t>::size_type>(out,v.size());
+            out.write(reinterpret_cast<const char*>(v.data()),sizeof(t)*v.size());
+            return out;
+        }
+        template<bino::reader stream> inline static stream& read(stream& in, std::vector<t>& v){
+            v.resize(bino::read<typename std::vector<t>::size_type>(in));
+            in.read(reinterpret_cast<char*>(v.data()),v.size()*sizeof(t));
+            return in;
+        }
+        template<bino::reader stream> inline static std::vector<t> read(stream& in){
+            std::vector<t> v(bino::read<typename std::vector<t>::size_type>(in));
+            in.read(reinterpret_cast<char*>(v.data()),sizeof(t)*v.size());
+            return v;
+        }
+    };
+
+    template<bino::nonpod t> struct bio<std::vector<t>>{
+        template<bino::writer stream> inline static stream& write(stream& out, const std::vector<t>& v){
+            bino::write<typename std::vector<t>::size_type>(out,v.size());
+            for(typename std::vector<t>::iterator i=v.begin();i!=v.end();++i) bino::write<t>(out,*i);
+            return out;
+        }
+        template<bino::reader stream> inline static stream& read(stream& in, std::vector<t>& v){
+            v.resize(bino::read<typename std::vector<t>::size_type>(in));
+            for(typename std::vector<t>::iterator i=v.begin();i!=v.end();++i) bino::read<t>(in,*i);
+            return in;
+        }
+        template<bino::reader stream> inline static std::vector<t> read(stream& in){
+            std::vector<t> v(bino::read<typename std::vector<t>::size_type>(in));
+            for(typename std::vector<t>::iterator i=v.begin();i!=v.end();++i) bino::read<t>(in,*i);
+            return v;
+        }
+    };
