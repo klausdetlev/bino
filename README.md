@@ -12,7 +12,7 @@ Supported container-types:
     std::pair
     std::tuple
 
-In case of vector and array, internal memory-layout is used to speed up reading and writing if possible
+In case of vector and array, internal memory-layout is used to speed up reading and writing if possible.
 Usage:
 
 Given an object A of type T.
@@ -97,4 +97,3 @@ With concepts
 
     template<typename t> concept pod = std::is_trivially_copyable<t>::value;
     template<typename t> concept nonpod = !std::is_triviallay_copyable<t>::value;
-    
