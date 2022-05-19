@@ -31,7 +31,7 @@ Given an object A of type T.
 
         T A = bino::read<T>("src.dat");
 
-    Reading and writing accept additional parameter of type std::ios_base::openmode:
+Reading and writing accept additional parameter of type std::ios_base::openmode:
 
     bino::write("dst.dat",A,std::ios::out);
     bino::read("dst.dat",A,std::ios::binary);
