@@ -3,6 +3,7 @@ Bino - a binary input output library for c++-17 (upwards)
 Supported container-types:
 
     std::vector
+    std::list
     std::map
     std::set
     std::unordered_map
