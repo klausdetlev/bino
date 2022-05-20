@@ -1,5 +1,7 @@
 Bino - a binary input output library for c++-17 (upwards)
 
+This is a header-only c++-library. Use it by including it into your header. No linking- or compiler-flags needed
+
 Supported container-types:
 
     std::vector
