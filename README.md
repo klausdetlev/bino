@@ -12,7 +12,6 @@ Supported container-types:
     std::pair
     std::tuple
 
-In case of vector and array, internal memory-layout is used to speed up reading and writing if possible.
 Usage:
 
 Given an object A of type T.
@@ -31,16 +30,25 @@ Given an object A of type T.
 
         T A = bino::read<T>("src.dat");
 
+In case of vector and array, internal memory-layout is used to speed up reading and writing if possible.
+
 Reading and writing accept additional parameter of type std::ios_base::openmode:
 
     bino::write("dst.dat",A,std::ios::out);
     bino::read("dst.dat",A,std::ios::binary);
 
-In case of write, binary and out are activated by default, in case of read, binary and in are activated by default.
+In case of write, std::ios::binary and std::ios::out are activated by default, in case of read, std::ios::binary and std::ios::in are activated by default.
+
 Read and write support usage of previously opened fstream-objects, and of- or ifstream-objects.
 
     std::fstream f("dst.dat",std::ios::out|std::ios::binary);
     bino::write(f,A);
+
+    std::ofstream out("dst.dat",std::ios::out|std::ios::binary);
+    bino::write(out,A);
+
+    std::ifstream in("src.dat",std::ios::in|std::ios::binary);
+    A = bino::read<T>(in);
 
 Extensible format via specialization of struct bio:
 
