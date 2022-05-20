@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <list>
 #include <unordered_map>
 #include <unordered_set>
 #include <map>
@@ -163,6 +164,24 @@ template<bino::nonpod t, size_t n> struct bio<std::array<t,n>>{
         std::array<t,n> a;
         for(typename std::array<t,n>::iterator i=a.begin();i!=a.end();++i) bio<t>::read(in,*i);
         return a;
+    }
+};
+
+template<typename t> struct bio<std::list<t>>{
+    template<bino::writer stream> inline static stream& write(stream& out, const std::list<t>& l){
+        bio<typename std::list<t>::size_type>::write(out,l.size());
+        for(typename std::list<t>::const_iterator i=l.begin();i!=l.end();++i) bio<t>::write(out,*i);
+        return out;
+    }
+    template<bino::reader stream> inline static stream& read(stream& in, std::list<t>& l){
+        l.resize(bio<typename std::list<t>::size_type>::read(in));
+        for(typename std::list<t>::iterator i=l.begin();i!=l.end();++i) bio<t>::read(in,*i);
+        return in;
+    }
+    template<bino::reader stream> inline static std::list<t> read(stream& in){
+        std::list<t> l(bio<typename std::list<t>::size_type>::read(in));
+        for(typename std::list<t>::iterator i=l.begin();i!=l.end();++i) bio<t>::read(in,*i);
+        return l;
     }
 };
 
