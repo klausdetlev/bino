@@ -63,8 +63,8 @@ Extensible format via specialization of struct bio:
 
 With concepts
 
-    template<typename t> concept writer = std::is_same<t,std::fstream>::value || std::is_same<t,std::ofstream>;
-    template<typename t> concept reader = std::is_same<t,std::fstream>::value || std::is_same<t,std::ifstream>;
+    template<typename t> concept writer = requires(t a, const char* ptr, size_t s){a.write(ptr,s);};
+    template<typename t> concept reader = requires(t a, char* ptr, size_t s){a.read(ptr,s);};
 
 Example for bio<std::vector<t>>:
 

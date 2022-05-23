@@ -18,8 +18,10 @@ template<typename t> struct bio;
 namespace bino{
     template<typename t> concept pod = std::is_trivially_copyable<t>::value;
     template<typename t> concept nonpod = !std::is_trivially_copyable<t>::value;
-    template<typename t> concept writer = std::is_same<std::fstream,t>::value || std::is_same<std::ofstream,t>::value;
-    template<typename t> concept reader = std::is_same<std::fstream,t>::value || std::is_same<std::ifstream,t>::value;
+    // template<typename t> concept writer = std::is_same<std::fstream,t>::value || std::is_same<std::ofstream,t>::value;
+    // template<typename t> concept reader = std::is_same<std::fstream,t>::value || std::is_same<std::ifstream,t>::value;
+    template<typename t> concept writer = requires(t a, const char* ptr, size_t s){a.write(ptr,s);};
+    template<typename t> concept reader = requires(t a, char* ptr, size_t s){a.read(ptr,s);};
 
     template<writer stream, typename t> stream& write(stream& out, const t& elem){
         bio<t>::write(out,elem);
