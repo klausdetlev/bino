@@ -1,8 +1,8 @@
-Bino - a binary input output library for c++-20 (upwards)
+# Bino - a binary input output library for c++-20 (upwards)
 
 This is a header-only c++-library. Use it by including it into your header. No linking- or compiler-flags needed
 
-Supported container-types:
+## Supported container-types:
 
     std::vector
     std::list
@@ -15,17 +15,17 @@ Supported container-types:
     std::pair
     std::tuple
 
-Usage:
+## Usage:
 
 Given an object A of type T.
-1. Writing:
+### 1. Writing:
 
         bino::write("dst.dat",A);
         bino::write<T>("dst.dat",A);
 
     Template type is deduced if necessary
 
-2. Reading:
+### 2. Reading:
 
         T A;
         bino::read("src.dat",A);
@@ -52,6 +52,8 @@ Read and write support usage of previously opened fstream-objects, and of- or if
 
     std::ifstream in("src.dat",std::ios::in|std::ios::binary);
     A = bino::read<T>(in);
+
+## Custom or not-supported containers
 
 Extensible format via specialization of struct bio:
 
