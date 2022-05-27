@@ -1,5 +1,9 @@
 # Bino - a binary input output library for c++-20 (upwards)
 
+Keywords: binary, data-storage, c++-container, concepts
+
+bino uses concepts to transparently support high-efficient binary data-read and -writes for streams with binary support.
+
 This is a header-only c++-library. Use it by including it into your header. No linking- or compiler-flags needed
 
 ## Supported container-types:
@@ -18,6 +22,7 @@ This is a header-only c++-library. Use it by including it into your header. No l
 ## Usage:
 
 Given an object A of type T.
+
 ### 1. Writing:
 
         bino::write("dst.dat",A);
