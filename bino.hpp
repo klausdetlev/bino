@@ -73,6 +73,7 @@ template<bino::pod t> struct bio<std::basic_string<t>>{
     template<bino::reader stream> inline static stream& read(stream& in, std::basic_string<t>& str){
         str.resize(bio<typename std::basic_string<t>::size_type>::read(in));
         in.read(reinterpret_cast<char*>(&str[0]),sizeof(t)*str.length());
+        return in;
     }
     template<bino::reader stream> inline static std::basic_string<t> read(stream& in){
         std::basic_string<t> retval;
