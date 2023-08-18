@@ -23,27 +23,30 @@ namespace bino{
     template<typename t> concept writer = requires(t a, const char* ptr, size_t s){a.write(ptr,s);};
     template<typename t> concept reader = requires(t a, char* ptr, size_t s){a.read(ptr,s);};
 
-    template<writer stream, typename t> stream& write(stream& out, const t& elem){
+    template<typename t, writer stream = std::ofstream> stream& write(stream& out, const t& elem){
         bio<t>::write(out,elem);
         return out;
     }
     template<typename t> void write(const std::string& dst, const t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
         std::ofstream out(dst.c_str(), om | std::ios::out | std::ios::binary);
+        if(!out) throw std::runtime_error("bino::write(const std::string&, const t&, const std::ios_base::openmode): could not open file \"" + dst + "\"\n");
         bio<t>::write(out,elem);
     }
-    template<reader stream, typename t> stream& read(stream& in, t& elem){
+    template<typename t, reader stream = std::ifstream> stream& read(stream& in, t& elem){
         bio<t>::read(in,elem);
         return in;
     }
     template<typename t> void read(const std::string& src, t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
         std::ifstream in(src.c_str(), om | std::ios::binary);
+        if(!in) throw std::runtime_error("bino::read(const std::string&, t&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
         bio<t>::read(in,elem);
     }
-    template<reader stream, typename t> t read(stream& in){
+    template<typename t, reader stream = std::ifstream> t read(stream& in){
         return bio<t>::read(in);
     }
     template<typename t> t read(const std::string& src, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
         std::ifstream in(src.c_str(), om | std::ios::binary);
+        if(!in) throw std::runtime_error("bino::read(const std::string&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
         return bio<t>::read(in);
     }
 }
