@@ -12,43 +12,57 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <variant>
 
 template<typename t> struct bio;
 
 namespace bino{
-    template<typename t> concept pod = std::is_trivially_copyable<t>::value;
-    template<typename t> concept nonpod = !std::is_trivially_copyable<t>::value;
-    // template<typename t> concept writer = std::is_same<std::fstream,t>::value || std::is_same<std::ofstream,t>::value;
-    // template<typename t> concept reader = std::is_same<std::fstream,t>::value || std::is_same<std::ifstream,t>::value;
-    template<typename t> concept writer = requires(t a, const char* ptr, size_t s){a.write(ptr,s);};
-    template<typename t> concept reader = requires(t a, char* ptr, size_t s){a.read(ptr,s);};
+template<typename t> concept pod = std::is_trivially_copyable<t>::value;
+template<typename t> concept nonpod = !std::is_trivially_copyable<t>::value;
+// template<typename t> concept writer = std::is_same<std::fstream,t>::value || std::is_same<std::ofstream,t>::value;
+// template<typename t> concept reader = std::is_same<std::fstream,t>::value || std::is_same<std::ifstream,t>::value;
+template<typename t> concept writer = requires(t a, const char* ptr, size_t s){a.write(ptr,s);};
+template<typename t> concept reader = requires(t a, char* ptr, size_t s){a.read(ptr,s);};
+template<typename t, writer stream = std::ofstream> stream& write(stream& out, const t& elem){
+    bio<t>::write(out,elem);
+    return out;
+}
+template<typename t> void write(const std::string& dst, const t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
+    std::ofstream out(dst.c_str(), om | std::ios::out | std::ios::binary);
+    if(!out) throw std::runtime_error("bino::write(const std::string&, const t&, const std::ios_base::openmode): could not open file \"" + dst + "\"\n");
+    bio<t>::write(out,elem);
+}
+template<typename t, reader stream = std::ifstream> stream& read(stream& in, t& elem){
+    bio<t>::read(in,elem);
+    return in;
+}
+template<typename t> void read(const std::string& src, t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
+    std::ifstream in(src.c_str(), om | std::ios::binary);
+    if(!in) throw std::runtime_error("bino::read(const std::string&, t&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
+    bio<t>::read(in,elem);
+}
+template<bino::reader Stream> struct binoproxy{
+    Stream s;
 
-    template<typename t, writer stream = std::ofstream> stream& write(stream& out, const t& elem){
-        bio<t>::write(out,elem);
-        return out;
+    binoproxy(Stream&& s): s(std::move(s)){}
+    template<typename t> operator t() {
+        return bio<t>::read(s);
     }
-    template<typename t> void write(const std::string& dst, const t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
-        std::ofstream out(dst.c_str(), om | std::ios::out | std::ios::binary);
-        if(!out) throw std::runtime_error("bino::write(const std::string&, const t&, const std::ios_base::openmode): could not open file \"" + dst + "\"\n");
-        bio<t>::write(out,elem);
-    }
-    template<typename t, reader stream = std::ifstream> stream& read(stream& in, t& elem){
-        bio<t>::read(in,elem);
-        return in;
-    }
-    template<typename t> void read(const std::string& src, t& elem, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
-        std::ifstream in(src.c_str(), om | std::ios::binary);
-        if(!in) throw std::runtime_error("bino::read(const std::string&, t&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
-        bio<t>::read(in,elem);
-    }
-    template<typename t, reader stream = std::ifstream> t read(stream& in){
-        return bio<t>::read(in);
-    }
-    template<typename t> t read(const std::string& src, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
-        std::ifstream in(src.c_str(), om | std::ios::binary);
-        if(!in) throw std::runtime_error("bino::read(const std::string&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
-        return bio<t>::read(in);
-    }
+};
+template<bino::reader Stream = std::ifstream> binoproxy<Stream> read(Stream& s){
+    return binoproxy(s);
+}
+inline binoproxy<std::ifstream> read(const std::string& src, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
+    return binoproxy(std::ifstream(src, om | std::ios::binary));
+}
+// template<typename t, reader stream = std::ifstream> t read(stream& in){
+//     return bio<t>::read(in);
+// }
+// template<typename t> t read(const std::string& src, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
+//     std::ifstream in(src.c_str(), om | std::ios::binary);
+//     if(!in) throw std::runtime_error("bino::read(const std::string&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
+//     return bio<t>::read(in);
+// }
 }
 
 template<bino::pod t> struct bio<t>{
@@ -321,31 +335,31 @@ template<typename t1, typename t2> struct bio<std::pair<t1,t2>>{
 };
 
 template<typename... t> struct bio<std::tuple<t...>>{
-    private:
-        template<size_t n, size_t stop> struct tup{
-            template<bino::writer stream> inline static stream& write(stream& out, const std::tuple<t...>& tupl){
-                bio<typename std::tuple_element<n,std::tuple<t...>>::type>::write(out,std::get<n>(tupl));
-                if constexpr (n == stop) return out;
-                else return tup<n+1,stop>::write(out,tupl);
-            }
-            template<bino::reader stream> inline static stream& read(stream& in, std::tuple<t...>& tupl){
-                bio<typename std::tuple_element<n,std::tuple<t...>>::type>::read(in,std::get<n>(tupl));
-                if constexpr (n == stop) return in;
-                else return tup<n+1,stop>::read(in,tupl);
-            }
-        };
-    public:
+private:
+    template<size_t n, size_t stop> struct tup{
         template<bino::writer stream> inline static stream& write(stream& out, const std::tuple<t...>& tupl){
-            return tup<0,sizeof...(t)-1>::write(out,tupl);
+            bio<typename std::tuple_element<n,std::tuple<t...>>::type>::write(out,std::get<n>(tupl));
+            if constexpr (n == stop) return out;
+            else return tup<n+1,stop>::write(out,tupl);
         }
         template<bino::reader stream> inline static stream& read(stream& in, std::tuple<t...>& tupl){
-            return tup<0,sizeof...(t)-1>::read(in,tupl);
+            bio<typename std::tuple_element<n,std::tuple<t...>>::type>::read(in,std::get<n>(tupl));
+            if constexpr (n == stop) return in;
+            else return tup<n+1,stop>::read(in,tupl);
         }
-        template<bino::reader stream> inline static std::tuple<t...> read(stream& in){
-            std::tuple<t...> retval;
-            tup<0,sizeof...(t)-1>::read(in,retval);
-            return retval;
-        }
+    };
+public:
+    template<bino::writer stream> inline static stream& write(stream& out, const std::tuple<t...>& tupl){
+        return tup<0,sizeof...(t)-1>::write(out,tupl);
+    }
+    template<bino::reader stream> inline static stream& read(stream& in, std::tuple<t...>& tupl){
+        return tup<0,sizeof...(t)-1>::read(in,tupl);
+    }
+    template<bino::reader stream> inline static std::tuple<t...> read(stream& in){
+        std::tuple<t...> retval;
+        tup<0,sizeof...(t)-1>::read(in,retval);
+        return retval;
+    }
 };
 
 #endif
