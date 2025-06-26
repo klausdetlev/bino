@@ -122,7 +122,7 @@ template<bino::nonpod t> struct bio<std::basic_string<t>>{
 template<bino::pod t> struct bio<std::vector<t>>{
     template<bino::writer stream> inline static stream& write(stream& out, const std::vector<t>& vec){
         bio<typename std::vector<t>::size_type>::write(out,vec.size());
-        out.write(reinterpret_cast<const char*>(vec.data()),vec.size()*sizeof(t));
+        out.write(reinterpret_cast<const char*>(vec.data()),static_cast<int64_t>(vec.size()*sizeof(t)));
         return out;
     }
     template<bino::reader stream> inline static stream& read(stream& in, std::vector<t>& vec){
