@@ -84,18 +84,18 @@ template<bino::pod t> struct bio<t>{
 template<bino::pod t> struct bio<std::basic_string<t>>{
     template<bino::writer stream> inline static stream& write(stream& out, const std::basic_string<t>& str){
         bio<typename std::basic_string<t>::size_type>::write(out,str.length());
-        out.write(reinterpret_cast<const char*>(str.c_str()),sizeof(t)*str.length());
+        out.write(reinterpret_cast<const char*>(str.c_str()),static_cast<int64_t>(sizeof(t)*str.length()));
         return out;
     }
     template<bino::reader stream> inline static stream& read(stream& in, std::basic_string<t>& str){
         str.resize(bio<typename std::basic_string<t>::size_type>::read(in));
-        in.read(reinterpret_cast<char*>(&str[0]),sizeof(t)*str.length());
+        in.read(reinterpret_cast<char*>(&str[0]),static_cast<int64_t>(sizeof(t)*str.length()));
         return in;
     }
     template<bino::reader stream> inline static std::basic_string<t> read(stream& in){
         std::basic_string<t> retval;
         retval.resize(bio<typename std::basic_string<t>::size_type>::read(in));
-        in.read(reinterpret_cast<char*>(&retval[0]),sizeof(t)*retval.length());
+        in.read(reinterpret_cast<char*>(&retval[0]),static_cast<int64_t>(sizeof(t)*retval.length()));
         return retval;
     }
 };
@@ -127,12 +127,12 @@ template<bino::pod t> struct bio<std::vector<t>>{
     }
     template<bino::reader stream> inline static stream& read(stream& in, std::vector<t>& vec){
         vec.resize(bio<typename std::vector<t>::size_type>::read(in));
-        in.read(reinterpret_cast<char*>(vec.data()),sizeof(t)*vec.size());
+        in.read(reinterpret_cast<char*>(vec.data()),static_cast<int64_t>(sizeof(t)*vec.size()));
         return in;
     }
     template<bino::reader stream> inline static std::vector<t> read(stream& in){
         std::vector<t> vec(bio<typename std::vector<t>::size_type>::read(in));
-        in.read(reinterpret_cast<char*>(vec.data()),sizeof(t)*vec.size());
+        in.read(reinterpret_cast<char*>(vec.data()),static_cast<int64_t>(sizeof(t)*vec.size()));
         return vec;
     }
 };
