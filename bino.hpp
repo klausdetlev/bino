@@ -53,7 +53,9 @@ template<bino::reader Stream = std::ifstream> binoproxy<Stream> read(Stream& s){
     return binoproxy(s);
 }
 inline binoproxy<std::ifstream> read(const std::string& src, const std::ios_base::openmode om = static_cast<std::ios_base::openmode>(0u)){
-    return binoproxy(std::ifstream(src, om | std::ios::binary));
+    std::ifstream in(src, om | std::ios::binary);
+    if(!in) throw std::runtime_error("bino::read(const std::string&, const std::ios_base::openmode): could not open file \"" + src + "\"\n");
+    return binoproxy(std::move(in));
 }
 // template<typename t, reader stream = std::ifstream> t read(stream& in){
 //     return bio<t>::read(in);
